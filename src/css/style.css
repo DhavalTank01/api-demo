@@ -1,0 +1,17 @@
+.fa-pen-to-square:hover {
+  color: #0d24b9;
+  cursor: pointer;
+}
+.fa-trash-can:hover {
+  color: #ff2828;
+  cursor: pointer;
+}
+.title {
+  display: flex;
+  border-bottom: 2px solid #dee2e6;
+  flex-wrap: nowrap;
+  align-content: center;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0px;
+}
