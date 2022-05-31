@@ -1,24 +1,20 @@
-import axios from "axios";
 import React, { useCallback, useEffect, useState } from "react";
 import pagenate from "../../utility/pagenate";
-
+import httpServices from "../../Services/httpServices";
 import PostHeader from "./PostHeader";
-import Alert from "../../Components/Alert";
 import Tabel from "./Tabel";
+import config from "../../config.json";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const Posts = () => {
-  const api = "https://jsonplaceholder.typicode.com/posts";
   const [posts, setPosts] = useState([]);
-  const [alert, setAlert] = useState({
-    type: "",
-    message: "",
-    isShow: false,
-  });
+
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
   const getPosts = async () => {
-    const { data: posts } = await axios.get(api);
+    const { data: posts } = await httpServices.get(config.api);
     setPosts(posts);
   };
 
@@ -37,19 +33,22 @@ const Posts = () => {
   }, []);
 
   const handelUpdate = async (item) => {
+    const oldPosts = filtered;
     item.title = "Updated";
-    const { data } = await axios.put(`${api}/${item.id}`, item);
-    if (data) {
-      const posts = [...filtered];
-      const idx = posts.indexOf(item);
-      posts[idx] = { ...item };
-      setPosts(posts);
-      setAlert({
-        isShow: true,
-        type: "warning",
-        message: "Post update successfully.",
-      });
+    const posts = [...filtered];
+    const idx = posts.indexOf(item);
+    posts[idx] = { ...item };
+    setPosts(posts);
+
+    try {
+      const { data } = await httpServices.put(`${config.api}/${item.id}`, item);
+      if (data) {
+        toast.success(`Post update successfully.`);
+      }
+    } catch (error) {
+      toast.error(`Something went wrong. ${error.message}.`);
     }
+    setPosts(oldPosts);
   };
 
   const handelAdd = async () => {
@@ -58,19 +57,21 @@ const Posts = () => {
       body: "text 1",
       userId: 1,
     };
-    const { data: post } = await axios.post(api, newPost);
     const allPosts = filtered;
-    const data = allPosts.concat([post]);
-    setPosts(data);
-    setAlert({
-      isShow: true,
-      type: "success",
-      message: "Post added successfully.",
-    });
+    try {
+      const { data: post } = await httpServices.post(config.api, newPost);
+      const data = allPosts.concat([post]);
+      setPosts(data);
+      toast.success(`Post added successfully.`);
+    } catch (error) {
+      toast.error(`Something went wrong. ${error.message}.`);
+      setPosts(allPosts);
+    }
   };
 
   const handelDelete = async (item) => {
-    await axios.delete(`${api}/${item.id}`, item);
+    const oldPosts = filtered;
+
     const remPosts = filtered.filter((post) => {
       if (item.id !== post.id) {
         return post;
@@ -78,33 +79,35 @@ const Posts = () => {
       return null;
     });
     setPosts(remPosts);
-    setAlert({
-      isShow: true,
-      type: "danger",
-      message: "Post delete successfully.",
-    });
-  };
 
-  const handelClose = useCallback(() => {
-    setAlert({
-      type: "",
-      message: "",
-      isShow: false,
-    });
-  }, []);
+    try {
+      await httpServices.delete(`${config.api}/${item.id}`, item);
+      toast.success("Post delete successfully.");
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        toast.error("The post already has been deleted.");
+      }
+
+      setPosts(oldPosts);
+    }
+  };
 
   const postList = pagenate(filtered, currentPage, pageSize);
 
   return (
     <>
       <div className="container mt-1">
-        {alert.isShow && (
-          <Alert
-            type={alert.type}
-            message={alert.message}
-            OnClose={handelClose}
-          />
-        )}
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
 
         <PostHeader onClick={handelAdd} />
 
