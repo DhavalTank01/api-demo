@@ -17,13 +17,13 @@ const Tabel = ({
     <>
       {filtered.length === 0 ? (
         <div className="mt-1 mb-1">
-          <Title title={"there are no movies in the database"} />
+          <Title title={"there are no posts in the database"} />
         </div>
       ) : (
         <>
           <div className="mt-1 mb-1">
             <Title
-              title={`showing ${postList.length} movies out of ${filtered.length}`}
+              title={`showing ${postList.length} posts out of ${filtered.length}`}
             />
           </div>
 
